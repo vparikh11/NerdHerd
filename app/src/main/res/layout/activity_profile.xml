@@ -4,15 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#e3eaef"
-    android:orientation="vertical"
-    tools:context=".SignupActivity">
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/signup"
-        android:textSize="36sp" />
+
 
     <ScrollView
         android:layout_width="match_parent"
@@ -23,6 +17,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/edit_profile"
+                android:textSize="36sp" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="24dp"
+                android:src="@drawable/editprof" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -393,11 +401,11 @@
             </RadioGroup>
 
             <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"
-            android:text="How often are you sad?"
-            android:textSize="28sp" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:text="How often are you sad?"
+                android:textSize="28sp" />
 
             <Spinner
                 android:id="@+id/sad_options"
@@ -561,12 +569,12 @@
                 android:text="@string/su_terms_of_agreement" />
 
             <Button
-                android:id="@+id/signup_confirm_btn"
+                android:id="@+id/save_changes_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:padding="8dp"
-                android:text="@string/signup"
+                android:text="@string/save_changes"
                 android:textSize="24sp" />
         </LinearLayout>
 
