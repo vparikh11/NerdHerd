@@ -11,73 +11,58 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
-
-import org.json.*;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class LoginActivity extends AppCompatActivity {
+public class EnterCodeActivity extends AppCompatActivity {
 
-    Button login_btn;
-    Button signup_btn;
-    Button forgotPasswordBtn;
-    EditText login_email;
-    EditText login_password;
-    String inline = "";
+    Button enter_btn;
+    Button resend_code_btn;
+    EditText code_text;
     String final_result = "";
-
-    public String getFinal_result(){
-        return final_result;
-    }
+    String final_message = "";
+    String final_email = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_enter_code);
 
-        //initializing the buttons
-        login_btn = findViewById(R.id.login);
-        signup_btn = findViewById(R.id.signup_btn);
-        forgotPasswordBtn = findViewById(R.id.forgot_password);
-        login_email = findViewById(R.id.login_email_field);
-        login_password = findViewById(R.id.login_password_field);
+        enter_btn = findViewById(R.id.enter_btn);
+        resend_code_btn = findViewById(R.id.resend_code_btn);
+        code_text = findViewById(R.id.enter_code);
 
-        //signup activity intent
+        Intent JSONintent = getIntent();
+        String message = JSONintent.getStringExtra("DataJSON");
+        String email_text = JSONintent.getStringExtra("email_address");
+        final_email = email_text;
+        final_message = message;
+        Log.d("MESSAGE = " , message);
+        Log.d("EMAIL_TEXT = " , email_text);
 
-        signup_btn.setOnClickListener(new View.OnClickListener() {
+        enter_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Context context = LoginActivity.this;
-                Class signupActivity = SignupActivity.class;
-                Intent intent = new Intent(context, signupActivity);
-                startActivity(intent); //transition to signup screen
-            }
-        });
-
-        //login activity intent
-        login_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Context context = LoginActivity.this;
-                if(true){
-                    Class mainPageActivity = MainPageActivity.class;
-                    Intent intent = new Intent(context, mainPageActivity);
-                    String email = login_email.getText().toString();
-                    String password = login_password.getText().toString();
-                    //String JSON = "{'email':email,'password':password}";
+                Context context = EnterCodeActivity.this;
+                if(checkCode()){
+                    // Go to reset password page
+                    Class resetPasswordActivity = ResetPasswordActivity.class;
+                    Intent intent = new Intent(context, resetPasswordActivity);
+                    String code = code_text.getText().toString();
+                    String JSON = "{'code':code}";
+                    //intent.putExtra("email_field", final_email);
                     AsyncTaskRunner myTask = new AsyncTaskRunner();
-                    //myTask.execute();
                     try {
                         final_result = myTask.execute("hi").get();
                     } catch (ExecutionException e) {
@@ -86,47 +71,36 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     Log.d("myTag in main", final_result);
-                    if (final_result.contains("valid")){
-                        AlertDialog.Builder mismatchPasswords = new AlertDialog.Builder(context);
-                        mismatchPasswords.setMessage(final_result);
-                        mismatchPasswords.setCancelable(true);
-                        mismatchPasswords.setPositiveButton("OK", null);
-                        mismatchPasswords.create().show();
-                    }else{
-                        intent.putExtra("DataJSON", final_result);
-                        startActivity(intent); //transition to main page screen
-                    }
-                   // startActivity(intent); //transition to main page screen
+                    intent.putExtra("DataJSON", final_result);
+                    startActivity(intent);
                 } else {
-                    AlertDialog.Builder mismatchPasswords = new AlertDialog.Builder(context);
-                    mismatchPasswords.setMessage("Invalid Email or Password");
-                    mismatchPasswords.setCancelable(true);
-                    mismatchPasswords.setPositiveButton("OK", null);
-                    mismatchPasswords.create().show();
+                    AlertDialog.Builder codeErrorAlert = new AlertDialog.Builder(context);
+                    codeErrorAlert.setMessage("Incorrect Code");
+                    codeErrorAlert.setPositiveButton("OK", null);
+                    codeErrorAlert.setCancelable(true);
+                    codeErrorAlert.create().show();
                 }
-
             }
         });
-
-        //forgot password intent
-        forgotPasswordBtn.setOnClickListener(new View.OnClickListener() {
+        resend_code_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Context context = LoginActivity.this;
-                Class sendVerificationCodeActivity = SendVerificationCodeActivity.class;
-                Intent intent = new Intent(context, sendVerificationCodeActivity);
-                startActivity(intent);
+                //TODO resend verification code
             }
         });
-
     }
 
-
-
-    public boolean accountVerification(){
-        //TODO check if email and password are a correct match
-        String email = login_email.getText().toString();
-        String password = login_password.getText().toString();
+    public boolean checkCode(){
+        String code = code_text.getText().toString();
+        JSONObject mainObject = null;
+        try {
+            mainObject = new JSONObject(final_message);
+            String final_code = mainObject.getString("code");
+            if (final_code.equals(code))
+                return true;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -141,20 +115,13 @@ public class LoginActivity extends AppCompatActivity {
             HttpsURLConnection client = null;
             String result = "";
             String inputLine;
-            login_email = findViewById(R.id.login_email_field);
-            login_password = findViewById(R.id.login_password_field);
             try{
-                URL url = new URL("https://nh-smartheart.herokuapp.com/login");
+                URL url = new URL("https://nh-smartheart.herokuapp.com/reset");
                 client = (HttpsURLConnection) url.openConnection();
                 client.setRequestMethod("POST");
-                //client.setRequestProperty("email","{\"email\":\"kichdi22@aol.com\"}");
-//                String input = "{\n" +
-//                        "\t\"email\":\"test7@gmail.com\" ,\n" +
-//                        "\t\"password\":\"password7\"\n" +
-//                        "}";
+
                 String input = "{\n" +
-                        "\t\"email\": \"" + login_email.getText().toString() +  "\",\n" +
-                        "\t\"password\":\"" + login_password.getText().toString() + "\"\n" +
+                        "\t\"email\":\"" + final_email + "\"\n" +
                         "}";
                 client.setRequestProperty("Accept","application/json");
                 client.setDoOutput(true);
@@ -191,7 +158,7 @@ public class LoginActivity extends AppCompatActivity {
                     client.disconnect();
             }
             Log.d("myTag", "URL POSTEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
-            Log.i("MSG" , final_result);
+            Log.i("FINAL RESULT = " , final_result);
             //Log.d("myTag", result);
             final_result = result;
             return result;
@@ -222,4 +189,6 @@ public class LoginActivity extends AppCompatActivity {
 
         }
     }
+
+
 }
